@@ -78,7 +78,7 @@ Für die Übungen benötigst du:
 │   ├── exercise-8-fehler-ausnahmebehandlung.md
 │   └── exercise-n-.md
 ├── slides/
-│   └── postgresql-schulung.pdf
+│   └── postgresql-aufbaukurs.pdf
 └── assets/
     └── (optional: Screenshots, Bilder, Logos)
 ```
