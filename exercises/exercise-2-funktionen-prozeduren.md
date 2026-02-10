@@ -77,11 +77,11 @@ SELECT order_total_with_vat(10248);
 
 Erstellen Sie eine Funktion:
 
-- Name: `orders_by_customer(customer_id TEXT)`
+- Name: `orders_by_customer(p_customer_id TEXT)`
 - Rückgabe:
-  - `order_id INT`
+  - `order_id smallint`
   - `order_date DATE`
-  - `ship_country TEXT`
+  - `ship_country character varying(15)`
 - Es sollen alle Bestellungen eines Kunden zurückgegeben werden
 
 Nutzen Sie `RETURN QUERY`.

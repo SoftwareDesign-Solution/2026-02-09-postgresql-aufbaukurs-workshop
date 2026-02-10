@@ -57,9 +57,9 @@ ADD COLUMN status order_status NOT NULL DEFAULT 'New';
 </p>
 </details>
 
-## 4.2 Set-basiertes UPDATE in einer Funktion
+## 4.2 Set-basiertes UPDATE in einer Procedure
 
-Erstelle eine Funktion `archive_old_orders()`, die alle Bestellungen (`orders`) auf den Status `'Archived'` setzt,
+Erstelle ein Procedure `archive_old_orders()`, die alle Bestellungen (`orders`) auf den Status `'Archived'` setzt,
 
 - deren `order_date` **älter als 5 Jahre** ist
 - und deren aktueller Status **nicht bereits** `'Archived'` ist.
@@ -81,7 +81,7 @@ Aktuelles Datum: CURRENT_DATE
 <p>
 
 ```sql
-CREATE OR REPLACE FUNCTION archive_old_orders()
+CREATE OR REPLACE PROCEDURE archive_old_orders()
 RETURNS void AS $$
 BEGIN
   UPDATE orders
@@ -164,6 +164,13 @@ Erstelle eine Funktion `close_orders_before(date)`, die:
 - Nutzung von `RETURNING`
 - Rückgabewert: Liste von IDs
 
+**Erwartetes Ergebnis**
+
+| order_id |
+| -------: |
+| 10248 |
+| ... |
+
 <details>
 <summary>Show solution</summary>
 <p>
@@ -172,13 +179,13 @@ Erstelle eine Funktion `close_orders_before(date)`, die:
 
 ```sql
 CREATE OR REPLACE FUNCTION close_orders_before(p_date date)
-RETURNS TABLE(order_id int) AS $$
+RETURNS TABLE(order_id smallint) AS $$
 BEGIN
   RETURN QUERY
-  UPDATE orders
+  UPDATE orders o
   SET status = 'Closed'
-  WHERE order_date < p_date
-  RETURNING order_id;
+  WHERE o.order_date < p_date
+  RETURNING o.order_id;
 END;
 $$ LANGUAGE plpgsql;
 ```
