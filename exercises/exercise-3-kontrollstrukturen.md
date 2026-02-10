@@ -15,13 +15,21 @@ Ziel: Du baust mehrere Funktionen, die typische Geschäftslogik direkt in der Da
 
 ## 3.1 CASE-Ausdruck für Versandkosten-Klassifikation
 
-Erstelle eine Funktion `shipping_bucket(freight numeric)` die einen Text zurückgibt:
+Erstelle eine Funktion `shipping_bucket(freight real)` die einen Text zurückgibt und teste diese Funktion:
 
 - `freight < 20` → `'LOW'`
 - `freight >= 20 AND freight < 60` → `'MEDIUM'`
 - `freight >= 60` → `'HIGH'`
 
 Hinweis: Nutze **CASE** (nicht IF).
+
+**Erwartetes Ergebnis**
+
+| freight | shipping_bucket |
+| ------: | --------------- |
+| 10 | LOW |
+| 50 | MEDIUM |
+| 80 | HIGH |
 
 <details>
 <summary>Show solution</summary>
@@ -30,9 +38,8 @@ Hinweis: Nutze **CASE** (nicht IF).
 **Funktion `shipping_bucket`**
 
 ```sql
-CREATE OR REPLACE FUNCTION shipping_bucket(freight numeric)
+CREATE OR REPLACE FUNCTION shipping_bucket(freight real)
 RETURNS text
-LANGUAGE plpgsql
 AS $$
 BEGIN
   RETURN CASE
@@ -41,7 +48,7 @@ BEGIN
     ELSE 'HIGH'
   END;
 END;
-$$;
+$$ LANGUAGE plpgsql;
 ```
 
 </p>
@@ -55,7 +62,13 @@ Erstelle eine Funktion `order_discount(order_id int)` die einen **Rabattfaktor**
 - **100 bis < 500** → `0.95`
 - **>= 500** → `0.90`
 
-Berechne dazu den Gesamtwert über `order_details` (üblich in Northwind: `unit_price * quantity * (1 - discount)`).
+Berechne dazu den Gesamtwert über `order_details` (üblich in Northwind: `unit_price * quantity * (1 - discount)`) und teste die Funktion.
+
+**Erwartetes Ergebnis**
+
+| p_order_id | order_discount |
+| ---------: | -------------: |
+| 10248 | 0.95 |
 
 <details>
 <summary>Show solution</summary>
@@ -66,7 +79,6 @@ Berechne dazu den Gesamtwert über `order_details` (üblich in Northwind: `unit_
 ```sql
 CREATE OR REPLACE FUNCTION order_discount(p_order_id int)
 RETURNS numeric
-LANGUAGE plpgsql
 AS $$
 DECLARE
   total_value numeric;
@@ -84,7 +96,7 @@ BEGIN
     RETURN 0.90;
   END IF;
 END;
-$$;
+$$ LANGUAGE plpgsql;
 ```
 
 </p>
@@ -103,6 +115,13 @@ Vorgaben:
 - Gib die **Top n** Kunden zurück
 - Nutze eine **FOR-Schleife über ein SELECT** und gib Zeilen mit **RETURN NEXT** zurück
 
+**Erwartetes Ergebnis**
+
+| top_customers_by_revenue |
+| ------------------------ |
+| QUICK","110277.305030394 |
+| ERNSH","104874.978143677 |
+
 <details>
 <summary>Show solution</summary>
 <p>
@@ -112,7 +131,6 @@ Vorgaben:
 ```sql
 CREATE OR REPLACE FUNCTION top_customers_by_revenue(p_n int)
 RETURNS TABLE(customer_id text, revenue numeric)
-LANGUAGE plpgsql
 AS $$
 DECLARE
   rec RECORD;
@@ -133,7 +151,9 @@ BEGIN
 
   RETURN;
 END;
-$$;
+$$ LANGUAGE plpgsql;
+
+SELECT top_customers_by_revenue(2);
 ```
 
 </p>
@@ -143,15 +163,24 @@ $$;
 
 Erstelle eine Funktion `orders_with_shipping_class(from_date date, to_date date)` die eine Ergebnismenge zurückgibt:
 
-- `order_id`
-- `order_date`
-- `freight`
-- `shipping_class` (über `shipping_bucket(freight)`)
+| Spalte | Datentyp |
+| ------ | -------- |
+| `order_id` | `SMALLINT` |
+| `order_date` | `DATE` |
+| `freight` | `REAL` |
+| `shipping_class` (über `shipping_bucket(freight)`) | `TEXT` |
 
 Vorgaben:
 
 - Nutze **RETURN QUERY**
 - Filtere nach `order_date` im Zeitraum
+
+**Erwartetes Ergebnis**
+
+| orders_with_shipping_class |
+| ------------------------ |
+| 10248","1996-07-04","32.38","MEDIUM" |
+| 10249","1996-07-05","11.61","LOW |
 
 <details>
 <summary>Show solution</summary>
@@ -161,8 +190,7 @@ Vorgaben:
 
 ```sql
 CREATE OR REPLACE FUNCTION orders_with_shipping_class(from_date date, to_date date)
-RETURNS TABLE(order_id int, order_date date, freight numeric, shipping_class text)
-LANGUAGE plpgsql
+RETURNS TABLE(order_id SMALLINT, order_date date, freight real, shipping_class text)
 AS $$
 BEGIN
   RETURN QUERY
@@ -174,7 +202,7 @@ BEGIN
   WHERE o.order_date::date BETWEEN from_date AND to_date
   ORDER BY o.order_date;
 END;
-$$;
+$$ LANGUAGE plpgsql;
 ```
 
 </p>
@@ -189,6 +217,12 @@ Erstelle eine Funktion `safe_top_customers(n int)` die sicherstellt:
 
 Nutze dafür absichtlich eine **LOOP** mit `EXIT WHEN` und rufe anschließend `top_customers_by_revenue(n)` per `RETURN QUERY` auf.
 
+**Erwartetes Ergebnis**
+
+| safe_top_customers |
+| ------------------ |
+| QUICK","110277.305030394 |
+
 <details>
 <summary>Show solution</summary>
 <p>
@@ -198,7 +232,6 @@ Nutze dafür absichtlich eine **LOOP** mit `EXIT WHEN` und rufe anschließend `t
 ```sql
 CREATE OR REPLACE FUNCTION safe_top_customers(p_n int)
 RETURNS TABLE(customer_id text, revenue numeric)
-LANGUAGE plpgsql
 AS $$
 BEGIN
   LOOP
@@ -214,7 +247,7 @@ BEGIN
   RETURN QUERY
   SELECT * FROM top_customers_by_revenue(p_n);
 END;
-$$;
+$$ LANGUAGE plpgsql;
 ```
 
 </p>
