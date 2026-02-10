@@ -24,16 +24,21 @@ Erstellen Sie eine Funktion:
 
 Testen Sie die Funktion mit einer existierenden order_id.
 
+**Erwartetes Ergebnis bei order_id 10248**
+
+| order_total_with_vat |
+| -------------------: |
+| 523.59999773025469 |
+
 <details>
 <summary>Show solution</summary>
 <p>
 
-**Funktion `order_total_with_vat`**
+**Funktion `order_total_with_vat` LANGUAGE plpqsql**
 
 ```sql
 CREATE OR REPLACE FUNCTION order_total_with_vat(p_order_id INT)
 RETURNS NUMERIC
-LANGUAGE plpgsql
 AS $$
 DECLARE
   total NUMERIC;
@@ -45,7 +50,22 @@ BEGIN
 
   RETURN total * 1.19;
 END;
-$$;
+$$ LANGUAGE plpgsql;
+
+SELECT order_total_with_vat(10248);
+```
+
+**Funktion `order_total_with_vat` LANGUAGE sql**
+
+```sql
+CREATE OR REPLACE FUNCTION order_total_with_vat(p_order_id INT)
+RETURNS NUMERIC
+AS $$
+  SELECT
+    SUM(unit_price * quantity * (1 - discount)) * 1.19
+  FROM order_details
+  WHERE order_id = p_order_id;
+$$ LANGUAGE sql;
 
 SELECT order_total_with_vat(10248);
 ```
@@ -66,6 +86,17 @@ Erstellen Sie eine Funktion:
 
 Nutzen Sie `RETURN QUERY`.
 
+**Erwartetes Ergebnis**
+
+| order_id | order_date | ship_country |
+| -------: | ---------- | ------------ |
+| 10643 | 1997-08-25 | Germany |
+| 10692 | 1997-10-03 | Germany |
+| 10702 | 1997-10-13 | Germany |
+| 10835 | 1998-01-15 | Germany |
+| 10952 | 1998-03-16 | Germany |
+| 11011 | 1998-04-09 | Germany |
+
 <details>
 <summary>Show solution</summary>
 <p>
@@ -74,8 +105,7 @@ Nutzen Sie `RETURN QUERY`.
 
 ```sql
 CREATE OR REPLACE FUNCTION orders_by_customer(p_customer_id TEXT)
-RETURNS TABLE(order_id INT, order_date DATE, ship_country TEXT)
-LANGUAGE plpgsql
+RETURNS TABLE(order_id SMALLINT, order_date DATE, ship_country character varying(15))
 AS $$
 BEGIN
   RETURN QUERY
@@ -83,7 +113,7 @@ BEGIN
   FROM orders o
   WHERE o.customer_id = p_customer_id;
 END;
-$$;
+$$ LANGUAGE plpgsql;
 
 SELECT * FROM orders_by_customer('ALFKI');
 ```
@@ -98,6 +128,17 @@ Erweitern Sie die Funktion aus **Teilaufgabe 2.2**:
 - Kennzeichnen Sie die Funktion als **STABLE**
 - Begründen Sie kurz, warum STABLE hier sinnvoll ist
 
+**Erwartetes Ergebnis**
+
+| order_id | order_date | ship_country |
+| -------: | ---------- | ------------ |
+| 10643 | 1997-08-25 | Germany |
+| 10692 | 1997-10-03 | Germany |
+| 10702 | 1997-10-13 | Germany |
+| 10835 | 1998-01-15 | Germany |
+| 10952 | 1998-03-16 | Germany |
+| 11011 | 1998-04-09 | Germany |
+
 <details>
 <summary>Show solution</summary>
 <p>
@@ -106,9 +147,8 @@ Erweitern Sie die Funktion aus **Teilaufgabe 2.2**:
 
 ```sql
 CREATE OR REPLACE FUNCTION orders_by_customer(p_customer_id TEXT)
-RETURNS TABLE(order_id INT, order_date DATE, ship_country TEXT)
+RETURNS TABLE(order_id SMALLINT, order_date DATE, ship_country character varying(15))
 STABLE
-LANGUAGE plpgsql
 AS $$
 BEGIN
   RETURN QUERY
@@ -116,7 +156,7 @@ BEGIN
   FROM orders o
   WHERE o.customer_id = p_customer_id;
 END;
-$$;
+$$ LANGUAGE plpgsql;
 ```
 
 **Begründung:**
@@ -139,6 +179,16 @@ Erstellen Sie eine zweite Funktion mit gleichem Namen `order_total_with_vat`:
   - Gesamtbetrag mit **frei übergebener MwSt**
 - Testen Sie beide Varianten der Funktion
 
+**Erwartetes Ergebnis bei order_id 10248**
+
+| order_total_with_vat |
+| -------------------: |
+| 523.59999773025469 |
+
+| order_total_with_vat |
+| -------------------: |
+| 470.79999795913657 |
+
 <details>
 <summary>Show solution</summary>
 <p>
@@ -151,7 +201,6 @@ CREATE OR REPLACE FUNCTION order_total_with_vat(
   p_vat_rate NUMERIC
 )
 RETURNS NUMERIC
-LANGUAGE plpgsql
 AS $$
 DECLARE
   total NUMERIC;
@@ -163,7 +212,7 @@ BEGIN
 
   RETURN total * (1 + p_vat_rate);
 END;
-$$;
+$$ LANGUAGE plpgsql;
 
 SELECT order_total_with_vat(10248);
 SELECT order_total_with_vat(10248, 0.07);
@@ -194,7 +243,6 @@ CREATE OR REPLACE PROCEDURE increase_product_price(
   p_category_id INT,
   p_percent NUMERIC
 )
-LANGUAGE plpgsql
 AS $$
 BEGIN
   UPDATE products
@@ -203,7 +251,7 @@ BEGIN
 
   COMMIT;
 END;
-$$;
+$$ LANGUAGE plpgsql;
 
 CALL increase_product_price(1, 0.10);
 ```
