@@ -57,9 +57,9 @@ ADD COLUMN status order_status NOT NULL DEFAULT 'New';
 </p>
 </details>
 
-## 4.2 Set-basiertes UPDATE in einer Procedure
+## 4.2 Set-basiertes UPDATE in einer Funktion
 
-Erstelle ein Procedure `archive_old_orders()`, die alle Bestellungen (`orders`) auf den Status `'Archived'` setzt,
+Erstelle ein Funktion `archive_old_orders()`, die alle Bestellungen (`orders`) auf den Status `'Archived'` setzt,
 
 - deren `order_date` **älter als 5 Jahre** ist
 - und deren aktueller Status **nicht bereits** `'Archived'` ist.
@@ -81,7 +81,7 @@ Aktuelles Datum: CURRENT_DATE
 <p>
 
 ```sql
-CREATE OR REPLACE PROCEDURE archive_old_orders()
+CREATE OR REPLACE FUNCTION archive_old_orders()
 RETURNS void AS $$
 BEGIN
   UPDATE orders
